@@ -189,11 +189,14 @@ def run_mode_1():
     print("#---------------------------------------")
     pattern = input_matrix_3x3("패턴")
 
-    # MAC 연산 및 성능 측정 (10회 반복 평균)
+    # MAC 연산 및 성능 측정 (10회 반복 평균).
     score_a = mac_operation(pattern, filter_a)
     score_b = mac_operation(pattern, filter_b)
+
+    # MAC 연산 성능 측정 (10회 반복 평균시간).
     avg_time_ms = measure_mac_performance(pattern, filter_a, iterations=10)
 
+    # 허용오차 정책을 적용한 판정 수행.
     decision = compare_scores(score_a, score_b, "A", "B")
 
     print("\n#---------------------------------------")
@@ -244,7 +247,9 @@ def run_mode_2(filepath: str = "data.json"):
     print("\n#---------------------------------------")
     print("# [1] 필터 로드")
     print("#---------------------------------------")
-    normalized_filters = {}  # { size_int: {"Cross": matrix, "X": matrix} }
+
+    # { size_int: {"Cross": matrix, "X": matrix} }
+    normalized_filters = {}  
 
     for size_key, filter_dict in raw_filters.items():
         # size_5 -> 5 추출
@@ -265,14 +270,28 @@ def run_mode_2(filepath: str = "data.json"):
 
         # 필터 항목별 검증 및 정규화.(raw_f_key: 원본 필터 키, matrix: 필터 행렬).
         for raw_f_key, matrix in filter_dict.items():
+
+            #
+            # 필터 키를 정규화하여 표준 라벨로 변환.(라벨 정규화).
+            # (예: "+", "cross", "CROSS" → "Cross").
+            #
             std_label = normalize_label(raw_f_key)
+
+            # 정사각형 모양이 맞는지 행렬 검사 수행.
             is_valid, err_msg, _ = validate_square_matrix(matrix, expected_size=size_n)
+            
+            # 검증 결과가 유효하고, 표준 라벨이 "Cross" 또는 "X"인 경우에만 저장.
             if is_valid and std_label in ("Cross", "X"):
+
+                # 필터 행렬을 정규화된 딕셔너리에 저장.
                 normalized_filters[size_n][std_label] = matrix
+
+                # 표준 라벨을 라벨 목록에 추가.
                 loaded_labels.append(std_label)
             else:
                 print(f"✗ {size_key} ({raw_f_key}) 로드 경고: {err_msg}")
 
+        # 필수 필터(Cross, X) 존재 여부 확인 및 로드 완료 메시지 출력.
         if "Cross" in normalized_filters[size_n] and "X" in normalized_filters[size_n]:
             print(f"✓ {size_key:<7} 필터 로드 완료 ({', '.join(loaded_labels)})")
         else:
@@ -285,10 +304,12 @@ def run_mode_2(filepath: str = "data.json"):
     passed_tests = 0
     failed_cases = []
 
+    # 패턴 항목별 검증 및 판정 수행.
     for pat_key, pat_info in raw_patterns.items():
         total_tests += 1
         print(f"--- {pat_key} ---")
 
+        # 패턴 항목이 딕셔너리 형식인지 확인.
         if not isinstance(pat_info, dict):
             reason = "스키마 오류: 패턴 항목이 객체 형식이 아님"
             print(f"판정: ERROR | FAIL ({reason})")
@@ -309,7 +330,7 @@ def run_mode_2(filepath: str = "data.json"):
             failed_cases.append((pat_key, reason))
             continue
 
-        # 입력 패턴과 expected 라벨 추출 및 정규화.
+        # 입력 패턴과 expected 라벨 추출 및 라벨 정규화.
         input_matrix = pat_info.get("input")
         raw_expected = pat_info.get("expected", "")
         expected_label = normalize_label(raw_expected)

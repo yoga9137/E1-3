@@ -182,7 +182,7 @@ Cross 필터 점수: 13.0 | X 필터 점수: 1.0
 
 ### ✨ 4.1 MAC 연산
 
-`mac(pattern, filter_matrix)` 함수는 중첩 반복문으로 각 위치의 값을 곱하고 누적합니다.
+`mac_operation(pattern, filter_matrix)` 함수는 중첩 반복문으로 각 위치의 값을 곱하고 누적합니다.
 
 ```python
 total = 0.0
