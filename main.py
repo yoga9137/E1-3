@@ -440,30 +440,34 @@ def run_bonus_pattern_generator():
 # 메인 메뉴 및 사용자 선택 처리.
 def main():
     while True:
+        try:
+            # 메인 메뉴 출력.
+            print("\n=== Mini NPU Simulator ===")
+            print("\n[모드 선택]")
+            print("1. 사용자 입력 (3x3)")
+            print("2. data.json 분석")
+            print("3. [보너스] N x N 패턴 생성기")
+            print("0. 종료")
+    
+            # 사용자 선택 입력.
+            choice = input("선택: ").strip()
+    
+            # 선택에 따른 모드 실행.
+            if choice == "1":
+                run_mode_1()
+            elif choice == "2":
+                run_mode_2("data.json")
+            elif choice == "3":
+                run_bonus_pattern_generator()
+            elif choice == "0":
+                print("시뮬레이터를 종료합니다.")
+                break
+            else:
+                print("잘못된 선택입니다. 0~3 사이의 번호를 입력하세요.")
 
-        # 메인 메뉴 출력.
-        print("\n=== Mini NPU Simulator ===")
-        print("\n[모드 선택]")
-        print("1. 사용자 입력 (3x3)")
-        print("2. data.json 분석")
-        print("3. [보너스] N x N 패턴 생성기")
-        print("0. 종료")
-
-        # 사용자 선택 입력.
-        choice = input("선택: ").strip()
-
-        # 선택에 따른 모드 실행.
-        if choice == "1":
-            run_mode_1()
-        elif choice == "2":
-            run_mode_2("data.json")
-        elif choice == "3":
-            run_bonus_pattern_generator()
-        elif choice == "0":
-            print("시뮬레이터를 종료합니다.")
+        except KeyboardInterrupt:
+            print("\n사용자에 의해 프로그램이 종료되었습니다.")
             break
-        else:
-            print("잘못된 선택입니다. 0~3 사이의 번호를 입력하세요.")
 
 
 # 프로그램 시작점.
