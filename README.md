@@ -185,10 +185,20 @@ Cross 필터 점수: 13.0 | X 필터 점수: 1.0
 `mac_operation(pattern, filter_matrix)` 함수는 중첩 반복문으로 각 위치의 값을 곱하고 누적합니다.
 
 ```python
-total = 0.0
-for row in range(n):
-    for col in range(n):
-        total += pattern[row][col] * filter_matrix[row][col]
+def mac_operation(pattern: list[list[float]], filter_matrix: list[list[float]]) -> float:
+    """
+    외부 라이브러리 없이 이중 반복문을 사용하여 MAC(Multiply-Accumulate) 연산을 수행합니다.
+    """
+
+    # pattern과 filter_matrix는 동일한 크기(N x N)라고 가정.
+    n = len(pattern)
+
+    # MAC 연산 수행: 각 요소를 곱하고 누적합을 계산.
+    total_score = 0.0
+    for i in range(n):
+        for j in range(n):
+            total_score += pattern[i][j] * filter_matrix[i][j]
+    return total_score
 ```
 
 NumPy 등 벡터화 라이브러리를 사용하지 않고 직접 구현했습니다. 결과는 실수형 점수로 반환합니다.
@@ -202,6 +212,31 @@ NumPy 등 벡터화 라이브러리를 사용하지 않고 직접 구현했습�
 | `+`, `cross`, `Cross` | `Cross` |
 | `x`, `X` | `X` |
 
+입력된 필터 키나 expected 라벨을 표준 라벨('Cross', 'X')로 정규화하는 함수.
+
+```
+def normalize_label(raw_label: str) -> str:
+    """
+    입력된 필터 키나 expected 라벨을 표준 라벨('Cross', 'X')로 정규화합니다.
+    """
+
+    # 입력이 문자열이 아닌 경우, 문자열로 변환하여 반환.
+    if not isinstance(raw_label, str):
+        return str(raw_label)
+
+    # 입력 라벨을 소문자로 변환하고 공백 제거.
+    cleaned = raw_label.strip().lower()
+
+    # 다양한 입력 형태를 표준 라벨로 매핑.
+    if cleaned in ("+", "cross"):
+        return "Cross"
+    elif cleaned in ("x",):
+        return "X"
+
+    # 기타 입력은 그대로 반환 (예: "unknown", "UNDECIDED" 등)
+    return raw_label.strip()
+```
+
 필터 키와 `expected` 값을 읽을 때 먼저 정규화하므로 대소문자나 기호 차이로 인한 불필요한 비교 실패를 줄입니다. 정규화할 수 없는 라벨은 해당 케이스의 FAIL 사유로 기록합니다.
 
 ### ✨ 4.3 점수 및 동점 처리
@@ -209,8 +244,19 @@ NumPy 등 벡터화 라이브러리를 사용하지 않고 직접 구현했습�
 Cross 점수가 X 점수보다 크면 `Cross`, 반대이면 `X`로 판정합니다. 두 점수의 차이가 `1e-9`(0.000000001)보다 작으면 부동소수점 표현 오차를 고려하여 `UNDECIDED`로 처리합니다.
 
 ```python
-if abs(score_a - score_b) < 1e-9:
-    result = "UNDECIDED"
+EPSILON = 1e-9
+
+# 허용오차 정책을 적용한 점수 비교 함수
+def compare_scores(score_a: float, score_b: float, label_a: str, label_b: str, epsilon: float = EPSILON) -> str:
+    """
+    허용오차(epsilon) 정책을 적용하여 두 필터 점수를 비교하고 판정 결과를 반환합니다.
+    """
+    if abs(score_a - score_b) < epsilon:
+        return "UNDECIDED"
+    elif score_a > score_b:
+        return label_a
+    else:
+        return label_b
 ```
 
 `UNDECIDED`는 `Cross` 또는 `X` expected와 일치하지 않으므로 PASS가 아니라 FAIL입니다. 이는 동점 상황에서 임의로 한 라벨을 선택하지 않도록 하는 비교 정책입니다.
